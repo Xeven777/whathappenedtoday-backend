@@ -2,10 +2,12 @@ package com.example.whathappenedtoday.service;
 
 import com.example.whathappenedtoday.model.Post;
 import com.example.whathappenedtoday.repository.PostRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -21,20 +23,15 @@ public class PostService {
     }
 
     public Post createPost(String content, String ipAddress) {
-        // 1. Validation (same as before)
         if (content == null || content.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Content cannot be empty.");
         }
         if (content.length() > 120) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Content must be at most 120 characters.");
         }
-
-        // 2. Check Daily Limit (same as before)
         if (hasUserPostedToday(ipAddress)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "You can only post once per day.");
         }
-
-        // 3. Create and Save Post (same as before)
         Post post = new Post(content, ipAddress);
         return postRepository.save(post);
     }
@@ -43,16 +40,15 @@ public class PostService {
         LocalDateTime startOfDay = LocalDateTime.now(ZoneId.of("UTC")).toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.toLocalDate().atTime(LocalTime.MAX).atZone(ZoneId.of("UTC"))
                 .toLocalDateTime();
-
         List<Post> todayPosts = postRepository.findByIpAddressAndTimestampBetween(ipAddress, startOfDay, endOfDay);
         return !todayPosts.isEmpty();
     }
 
-    public List<Post> getPostsForToday() {
-        LocalDateTime startOfDay = LocalDateTime.now(ZoneId.of("UTC")).toLocalDate().atStartOfDay();
-        LocalDateTime endOfDay = startOfDay.toLocalDate().atTime(LocalTime.MAX).atZone(ZoneId.of("UTC"))
-                .toLocalDateTime();
-
-        return postRepository.findByTimestampBetween(startOfDay, endOfDay); // Find all posts for today
+    public List<Post> getPostsForDate(LocalDate date) {
+        LocalDateTime startOfDay = date.atStartOfDay(); // Start of the requested date in UTC
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX).atZone(ZoneId.of("UTC")).toLocalDateTime(); // End of the
+                                                                                                        // requested
+                                                                                                        // date in UTC
+        return postRepository.findByTimestampBetween(startOfDay, endOfDay);
     }
 }
