@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 public interface PostRepository extends MongoRepository<Post, String> {
     // Custom query methods can be defined here if needed
     List<Post> findByIpAddressAndTimestampBetween(String ipAddress, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    List<Post> findByTimestampBetween(LocalDateTime startOfDay, LocalDateTime endOfDay);
 }
 // This interface extends MongoRepository, which provides CRUD operations for
 // the Post entity.
