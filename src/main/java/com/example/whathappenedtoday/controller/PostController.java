@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/posts")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = { "http://localhost:3000", "https://whathappndtoday.vercel.app" })
 public class PostController {
 
     private static final Logger logger = Logger.getLogger(PostController.class.getName());
