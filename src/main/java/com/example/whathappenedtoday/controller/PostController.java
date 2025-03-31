@@ -29,6 +29,13 @@ public class PostController {
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
         String content = requestBody.get("content");
+        String ipAddress;
+
+        if (requestBody.get("ipaddress") == null || requestBody.get("ipaddress").trim().isEmpty()) {
+            ipAddress = getClientIpAddress(request);
+        } else {
+            ipAddress = requestBody.get("ipaddress");
+        }
 
         // Validate content
         if (content == null || content.trim().isEmpty()) {
@@ -36,7 +43,6 @@ public class PostController {
         }
 
         try {
-            String ipAddress = getClientIpAddress(request);
             Post createdPost = postService.createPost(content, ipAddress);
             logger.info("Created post with ID: " + createdPost.getId());
             return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
@@ -69,12 +75,28 @@ public class PostController {
     }
 
     private String getClientIpAddress(HttpServletRequest request) {
+        String ipAddress = null;
+
         try {
             String xForwardedForHeader = request.getHeader("X-Forwarded-For");
             if (xForwardedForHeader != null && !xForwardedForHeader.isEmpty()) {
-                return xForwardedForHeader.split(",")[0].trim();
+                // X-Forwarded-For can contain multiple IPs in a chain. Get the first one.
+                ipAddress = xForwardedForHeader.split(",")[0].trim();
+                logger.info("X-Forwarded-For IP: " + ipAddress);
+                return ipAddress;
             }
-            return request.getRemoteAddr();
+
+            String xRealIpHeader = request.getHeader("X-Real-IP");
+            if (xRealIpHeader != null && !xRealIpHeader.isEmpty()) {
+                ipAddress = xRealIpHeader.trim();
+                logger.info("X-Real-IP: " + ipAddress);
+                return ipAddress;
+            }
+
+            ipAddress = request.getRemoteAddr();
+            logger.info("RemoteAddr IP: " + ipAddress);
+            return ipAddress;
+
         } catch (Exception e) {
             logger.warning("Error getting client IP: " + e.getMessage());
             return "unknown";
