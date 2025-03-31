@@ -1,0 +1,15 @@
+.git
+.github
+target
+.idea
+.vscode
+_.iml
+_.iws
+\*.ipr
+.settings
+.classpath
+.project
+.DS_Store
+src/main/resources/application-dev.properties
+.env
+README.md
